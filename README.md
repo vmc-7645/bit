@@ -5,6 +5,8 @@ A minimal solution to versioning without all the fancy features.
 
 Meant to be used as a form of saving and undoing recent changes. Do not use for repository management.
 
+It also has no inbuilt functionality for nested files.
+
 # Functionality
 
 All commands.
@@ -15,12 +17,12 @@ Lists commands along with short description of each.
 bit help
 ```
 
-Adds current changes history log. Note that you may only load commits that have been tagged.
+Pushes current changes to queue, removing the previous queue simultaniously. Note that you may only load commits that have been tagged.
 ```
 bit add
 ```
 
-Tags current changes in history, allowing for jumping back to this change specifically.
+Tags current changes in queue, allowing for jumping back to this change specifically.
 ```
 bit tag
 ```
@@ -45,19 +47,64 @@ Clears out all history from this location and its children.
 bit clear [default is all, if index set, then everything aside for the most recent to that index are saved]
 ```
 
+Remove bit from location.
+```
+bit delete
+```
+
 Allows for changing the default command from `help` to another. 
 ```
 bit default
 ```
 
+# How it works
+
+## Initialization
+
+Occurs when the first add is ran and the `.bit` directory is generated.
+
+Within the `.bit` directory the following are generated:
+- `timeline` a file that holds the changes between the different versions in `bit`
+- `settings` alters how bit interacts with your files.
+- `/filestore` a directory to hold timeline files.
+
+On initialization, the current files are tagged, hashed, and pushed autmatically to the timeline.
+
+## Adding, Tagging, and Jumping
+
+Adding files puts the current files you are editing into a queue. If you perform edits and perform the add function again, that queue is replaced with the files you most recently edited.
+
+Tagging pushes your queue to the bit timeline. Allowing you to seek back to it and any previously tagged files.
+
+Jumping allows the user to switch the current working files to those saved from the jumped-to version.
+
+**Adding**:
+- Generates a hash of each file.
+- If the hash is unique relative to file name in `timeline`, it is kept in the queue.
+  - Assigned name `[hash_of_file].[filename].[file_extension]`. Note that the filename and extension are used in the hash.
+  - That hash is kept in `queuedata`.
+
+**Tagging**:
+- If the queue holds any files, those files are pushed into `filestore`.
+- Once pushed to `filestore`, the hashes are saved into the timeline and tagged under their new (most recent) version.
+- Each version keeps track of what files (via their file hash) they had.
+
+**Jumping**:
+- Checks each hash in the version being jumped to.
+  - If the hash matches one in the current queue, it is ignored. 
+  - If it does not match, it is pushed and the current files are changed to match.
+  - If the hashs that don't match don't exist in that version, they are removed.
+
+
 
 # Compilation
 
-
+Compile
 ```
 g++ src/main.cpp -o bin/bit.exe
 ```
 
+Run
 ```
-start bit.exe
+bit [command]
 ```
