@@ -97,9 +97,6 @@ void generateTimeline(){
 void queueToTimeline(){
     if (!fs::exists("./.bit/timeline")) return generateTimeline(); //If it doesn't exist, generate.
     
-    // if it does exist, load timeline
-    // vector<string> rlines = fileLineData("./.bit/timeline");
-
     // Get queue
 
     // iterate through files
@@ -114,9 +111,10 @@ void currentToQueue(){
     if (!fs::exists("./.bit/timeline")) generateTimeline(); //If it doesn't exist, generate.
     
     // get files.
+    vector<string> toQueue = listFiles();
 
     // iterate through files.
-
+    for (const auto& files : toQueue) {
         // get hash for each file.
 
         // if hash exists in queue, skip.
@@ -124,7 +122,7 @@ void currentToQueue(){
         // if hash does not exist in queue, push to queue and filestore.
 
         // for every queue item that exists in filestore but not in new queue or timeline, remove it.
-
+    }
     return;
 } 
 
