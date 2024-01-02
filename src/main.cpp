@@ -31,13 +31,6 @@ vector<string> split(string s, string delimiter) {
     return res;
 }
 
-// Generate hash from file
-string hashFromFile(const string& pathString){
-
-    return "";
-}
-
-
 // List files at directory
 vector<string> listFiles(const string& pathString = currentPathString) {
     vector<string> pathsVector;
@@ -83,6 +76,39 @@ vector<string> fileLineData(const string& pathString) {
     return fileLines;
 }
 
+string hashVecStr(vector<string> const& vecOfStr) {
+
+    // Convert string to uint32_t
+    vector<uint32_t> vec;
+    for (string str : vecOfStr)
+        vec.push_back(static_cast<uint32_t>(stoul(str)));
+
+    // Generate hash : https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector/72073933#72073933 
+    size_t seed = vec.size();
+    for(auto x : vec) {
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = ((x >> 16) ^ x) * 0x45d9f3b;
+        x = (x >> 16) ^ x;
+        seed ^= x + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+    return to_string(seed);
+}
+
+// Generate hash from file
+string hashFromFile(const string& pathString){
+
+    // read file data from location
+    vector<string> linesFromDoc = fileLineData(pathString);
+
+    // TODO: add path to linesfromdoc so that hash is more unique
+    // might actually change this to save spaec. i.e. no need to create a completely new file if you're just renaming it.
+    
+    // get hash of vector<string>
+    string fileHash = hashVecStr(linesFromDoc);
+
+    return fileHash;
+}
+
 // Initialize timeline
 void generateTimeline(){
     fs::create_directories("./.bit/filestore");
@@ -115,6 +141,7 @@ void currentToQueue(){
 
     // iterate through files.
     for (const auto& files : toQueue) {
+        
         // get hash for each file.
 
         // if hash exists in queue, skip.
