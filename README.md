@@ -98,10 +98,9 @@ Jumping allows the user to switch the current working files to those saved from 
 Timeline entry (and queue) format:
 ```
 --- // entry seperator (not used in queue file)
-[entryid] // not used in queue file 
-[filename] :: [filehash]
-[filename] :: [filehash]
-[filename] :: [filehash]
+[filename]::[filehash]
+[filename]::[filehash]
+[filename]::[filehash]
 ```
 
 
@@ -117,3 +116,32 @@ Run
 ```
 bit [command]
 ```
+
+# TODO
+
+## High Priotity
+
+- [ ] commands
+  - [ ] help
+  - [ ] add
+  - [ ] tag
+  - [ ] at
+  - [ ] jump
+  - [ ] look
+  - [ ] clear
+  - [ ] default
+- [ ] easier code readability
+- [ ] full test suite
+
+## Future Plans
+
+- Ignore tags
+  - Ignore specific files for pushing/pulling.
+  - Allows for keepings, say, an application untouched while easily altering its save files.
+- Nested file support and folder support
+- UI
+  - So more people can use the functions here
+  - Compiled version is paid, code is completely open-source so people can compile it themselves if they want.
+- Easier accessability for commands
+  - Mainly so that we can a: call the function from anywhere, and b: so that more people actually use it. 
+- Wiki
