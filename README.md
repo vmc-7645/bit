@@ -81,7 +81,7 @@ Jumping allows the user to switch the current working files to those saved from 
 **Adding**:
 - Generates a hash of each file.
 - If the hash is unique relative to file name in `timeline`, it is kept in the queue.
-  - Assigned name `[hash_of_file].[filename].[file_extension]`. Note that the filename and extension are used in the hash.
+  - Assigned name `[hash_of_file]`. Note that the filename and extension are not used in the hash. Instead they are used in the reference to this location in the timeline.
   - That hash is kept in `queuedata`.
 
 **Tagging**:
@@ -94,6 +94,15 @@ Jumping allows the user to switch the current working files to those saved from 
   - If the hash matches one in the current queue, it is ignored. 
   - If it does not match, it is pushed and the current files are changed to match.
   - If the hashs that don't match don't exist in that version, they are removed.
+
+Timeline entry (and queue) format:
+```
+--- // entry seperator (not used in queue file)
+[entryid] // not used in queue file 
+[filename] :: [filehash]
+[filename] :: [filehash]
+[filename] :: [filehash]
+```
 
 
 

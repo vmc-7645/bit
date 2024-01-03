@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <unordered_map> // for hashing https://stackoverflow.com/questions/8029121/how-to-hash-stdstring
+// #include <unordered_map> // for hashing https://stackoverflow.com/questions/8029121/how-to-hash-stdstring
 
 using namespace std;
 namespace fs = filesystem;
@@ -69,9 +69,7 @@ vector<string> fileLineData(const string& pathString) {
         return fileLines;
     }
     string line;
-    while (getline(inputFile, line)) {
-        fileLines.push_back(line);
-    }
+    while (getline(inputFile, line)) fileLines.push_back(line); // get lines
     inputFile.close();
     return fileLines;
 }
@@ -101,7 +99,7 @@ string hashFromFile(const string& pathString){
     vector<string> linesFromDoc = fileLineData(pathString);
 
     // TODO: add path to linesfromdoc so that hash is more unique
-    // might actually change this to save spaec. i.e. no need to create a completely new file if you're just renaming it.
+    // might actually change this to save space. i.e. no need to create a completely new file if you're just renaming it.
     
     // get hash of vector<string>
     string fileHash = hashVecStr(linesFromDoc);
@@ -118,16 +116,109 @@ void generateTimeline(){
     return;
 }
 
+string genQueueID(const string& pathString, string fileHash = "NA"){
+    if (fileHash=="NA") fileHash = hashFromFile(pathString);// if filehash is not available, generate it.
+    string ret = pathString+"::"+fileHash;
+    return ret;
+}
+
+vector<string> getQueue(){
+    // get queue items
+    // TODO
+
+    return;
+}
+
+// Clear queue
+vector<string> clearQueue(){
+    // get queue items
+    vector<string> queueItems = getQueue();
+
+    // remove queue items from filestore
+    // TODO
+
+    // clear queue references
+    // TODO
+
+    return;
+}
+
+void addQueue(const string& pathString, string fileHash = "NA"){
+    
+    // if filehash is not available, generate it.
+    if (fileHash=="NA") fileHash = hashFromFile(pathString);
+    
+    // get contents from pathString
+    // TODO 
+
+    // add filename & hash to queue
+    // TODO
+
+    return;
+}
+
+bool inQueue(const string& pathString, string fileHash = "NA"){
+    
+    // if filehash is not available, generate it.
+    if (fileHash=="NA") fileHash = hashFromFile(pathString);
+    
+    // iterate through items in queue
+    for (const auto& queueItem : getQueue()) {
+        if (queueItem==genQueueID(pathString,fileHash)) return true;
+    }
+    return false;
+}
+
+bool inFilestore(string fileHash){
+
+    // pull files in filestore
+    // TODO
+
+    // iterate through filenames
+
+        // if filename matches fileHash, return true
+
+    return false;
+}
+
+void addFilestore(const string& pathString, string fileHash = "NA"){
+
+    // if item not in filesote, add to filestore
+    // TODO
+
+    return;
+}
+
 
 // Save queue to timeline
 void queueToTimeline(){
     if (!fs::exists("./.bit/timeline")) return generateTimeline(); //If it doesn't exist, generate.
     
     // Get queue
+    vector<string> queueItems = getQueue();
 
-    // iterate through files
+    // loc & hash
+    string fileLoc;
+    string fileHash;
 
-        // if file exists in filestore, remove from queue and add to timeline
+    // iterate through files in queue
+    for (const auto& queueItem : queueItems) {
+        
+        // if file exists in filestore, add to timeline. 
+        vector<string> vec = split(queueItem,"::");
+        if (!vec.empty()) {
+            fileLoc = vec.front();
+            fileHash = vec.back();
+            if (inQueue(fileLoc,fileHash)){
+                
+                // Add item to filestore
+                // TODO
+            }
+        }
+    }
+
+    // Clear queue
+    clearQueue();
 
     return;
 }
@@ -138,17 +229,24 @@ void currentToQueue(){
     
     // get files.
     vector<string> toQueue = listFiles();
+    
+    // get queue items.
+    vector<string> queueItems = getQueue(); // TODO possibly replace with clearQueue.
 
     // iterate through files.
-    for (const auto& files : toQueue) {
+    for (const auto& fileLoc : toQueue) {
         
         // get hash for each file.
+        string fileHash = hashFromFile(fileLoc);
 
-        // if hash exists in queue, skip.
+        // if hash exists in queue, with the same name, skip.
+        if (inQueue(fileLoc,fileHash)) continue;
 
         // if hash does not exist in queue, push to queue and filestore.
+        // TODO
 
         // for every queue item that exists in filestore but not in new queue or timeline, remove it.
+        // TODO
     }
     return;
 } 
