@@ -11,46 +11,63 @@ It also has no inbuilt functionality for nested files.
 
 All commands.
 
+----
 
 Lists commands along with short description of each.
 ```
 bit help
 ```
 
+----
+
 Pushes current changes to queue, removing the previous queue simultaniously. Note that you may only load commits that have been tagged.
 ```
 bit add
 ```
+
+----
 
 Tags current changes in queue, allowing for jumping back to this change specifically.
 ```
 bit tag
 ```
 
+----
+
 Runs add and tag consecutively.
 ```
 bit at
 ```
+
+----
 
 Jump back to specific change. Note that if you jump back and 'add' consecutively, all would-be branches are removed. 
 ```
 bit jump [relative index. ex: -2, -1, 1, 2, etc.]
 ```
 
+----
+
 View history of changes. Lists files changed.
 ```
 bit look [max viewable]
 ```
+
+----
 
 Clears out all history from this location and its children.
 ```
 bit clear [default is all, if index set, then everything aside for the most recent to that index are saved]
 ```
 
+----
+
 Remove bit from location.
 ```
 bit delete
 ```
+
+----
 
 Allows for changing the default command from `help` to another. 
 ```
@@ -121,6 +138,7 @@ bit [command]
 
 ## High Priotity
 
+- [ ] basic functionality
 - [ ] commands
   - [ ] help
   - [ ] add

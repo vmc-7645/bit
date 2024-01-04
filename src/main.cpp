@@ -31,6 +31,12 @@ vector<string> split(string s, string delimiter) {
     return res;
 }
 
+// Get base name from file path
+string baseName(std::string const & path)
+{
+    return path.substr(path.find_last_of("/\\") + 1);
+}
+
 // List files at directory
 vector<string> listFiles(const string& pathString = currentPathString) {
     vector<string> pathsVector;
@@ -82,7 +88,15 @@ string hashVecStr(vector<string> const& vecOfStr) {
 
     // Convert string to uint32_t
     vector<uint32_t> vec;
-    for (string str : vecOfStr) vec.push_back(static_cast<uint32_t>(stoul(str)));
+    unsigned long temp;
+    const char *array;
+    char *endptr;
+
+    for (string str : vecOfStr) {
+        array = str.c_str();
+        temp=strtol(array, &endptr, 10);
+        vec.push_back(static_cast<uint32_t>(temp));
+    }
 
     // Generate hash : https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector/72073933#72073933 
     size_t seed = vec.size();
@@ -146,16 +160,10 @@ vector<string> clearQueue(){
 // Clear queue
 vector<string> deleteQueue(vector<string> queueItems = clearQueue()){
     // remove queue items from filestore
-    // TODO
     string toDelete;
     for (const auto& queueItem : queueItems) {
         toDelete = "./.bit/filestore/"+queueItem;
         const int result = filesystem::remove(toDelete);
-        if( result == 0 ){
-            printf( "success\n" );
-        } else {
-            printf( "%s\n", strerror( errno ) ); // No such file or directory
-        }
     }
 
     return queueItems;
@@ -190,27 +198,26 @@ bool inQueue(const string& pathString, string fileHash = "NA", vector<string> qu
 }
 
 bool inFilestore(string fileHash){
-
-    // pull files in filestore
-    // TODO
-
-    // iterate through filenames
-
-        // if filename matches fileHash, return true
-        // TODO
-
+    vector<string> filestore = listFiles("./.bit/filestore");
+    for (const auto& f : filestore) {
+        if (baseName(f)==fileHash) return true;
+    }
     return false;
 }
 
-void addFilestore(const string& pathString, string fileHash = "NA"){
-
-    // if filehash is not available, generate it.
+bool addFilestore(const string& pathString, string fileHash = "NA"){
     if (fileHash=="NA") fileHash = hashFromFile(pathString);
-
-    // if item not in filestore, add to filestore
-    // TODO
-
-    return;
+    fs::path targetParent = "./.bit/filestore/";
+    auto targetLoc = targetParent / fileHash;
+    if (inFilestore(fileHash)) return true; // already exists
+    try {
+        // fs::create_directories(targetParent); // Recursively create target directory if not existing.
+        fs::copy_file(pathString, targetLoc, fs::copy_options::overwrite_existing);
+    }
+    catch (exception& e) {
+        cout << e.what();
+    }
+    return false; // didn't already exist
 }
 
 
@@ -230,8 +237,6 @@ void queueToTimeline(){
             fileLoc = vec.front();
             fileHash = vec.back();
             if (inQueue(fileLoc,fileHash)){
-                
-                // Add item to filestore
                 addFilestore(fileLoc,fileHash);
             }
         }
@@ -246,28 +251,28 @@ void queueToTimeline(){
 // Save files to queue
 void currentToQueue(){
     if (!fs::exists("./.bit/timeline")) generateTimeline(); //If it doesn't exist, generate.
-    
-    // get files.
     vector<string> toQueue = listFiles();
-    
-    // get queue items.
     vector<string> queueItems = clearQueue();
-
-    // iterate through files.
+    cout << "Queued: ";
+    bool first = true;
+    string bname;
     for (const auto& fileLoc : toQueue) {
-        
-        // get hash for each file.
-        string fileHash = hashFromFile(fileLoc);
+        bname = baseName(fileLoc);
 
-        // if hash exists in queue, with the same name, skip.
+        if (bname==".bit") continue; // TODO: replace with check for ignore files.
+        // TODO iterate through ignoredFiles
+
+        string fileHash = hashFromFile(fileLoc);
         if (inQueue(fileLoc,fileHash,queueItems)) continue;
 
         // if hash does not exist in queue, push to queue and filestore.
         addQueue(fileLoc,fileHash);
 
-        // for every queue not here, delete from filestore
-        // TODO HIGH PRIORITY
+        if (first) cout<<bname;
+        else cout<<", "<<bname;
+        first=false;
     }
+    cout <<"\n";
     return;
 } 
 
@@ -337,27 +342,32 @@ int tag(){
 }
 
 int jump(){
+    //TODO
     cout << "Jumped";
     return 0;
 }
 
 int look(){
+    //TODO
     cout << "View timeline";
     return 0;
 }
 
 int clear(){
+    //TODO
     cout << "Cleared items from timeline";
     return 0;
 }
 
 int def(){
+    //TODO
     cout << "Defined new default command";
     return 0;
 }
 
 // Command lookup
 int commandLookup(string cmdname){
+    // TODO replace with switch if possible
     if (cmdname=="help" || cmdname=="h"){
         return help();
     } else if (cmdname=="add" || cmdname=="a"){
