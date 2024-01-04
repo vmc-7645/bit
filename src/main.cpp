@@ -8,7 +8,7 @@
 using namespace std;
 namespace fs = filesystem;
 
-// 
+// Settings
 bool runDefault = false;
 string defaultCommand = "help";
 vector<string> ignoredFiles;
@@ -32,10 +32,15 @@ vector<string> split(string s, string delimiter) {
 }
 
 // Get base name from file path
-string baseName(std::string const & path)
-{
+string baseName(string const & path) {
     return path.substr(path.find_last_of("/\\") + 1);
 }
+
+// vector<byte> getByteArray(const string& str){
+//     vector<byte> buffer;
+//     for (char str_char : str)buffer.push_back(byte(str_char));
+//     return buffer;
+// }
 
 // List files at directory
 vector<string> listFiles(const string& pathString = currentPathString) {
@@ -51,17 +56,6 @@ vector<string> listFiles(const string& pathString = currentPathString) {
     return pathsVector;
 }
 
-// 
-vector<string> fileSizes(const vector<string> pathStrings) {
-    vector<string> fileSizes;
-    string fileSize;
-    for (const auto& fileLoc : pathStrings) {
-        fileSize = fs::file_size(fileLoc);
-        fileSizes.push_back(fileSize);
-    }
-    return fileSizes;
-}
-
 // Read file data
 vector<string> fileLineData(const string& pathString) {
     vector<string> fileLines;
@@ -75,7 +69,9 @@ vector<string> fileLineData(const string& pathString) {
         return fileLines;
     }
     string line;
-    while (getline(inputFile, line)) fileLines.push_back(line); // get lines
+    while (getline(inputFile, line)) {
+        fileLines.push_back(line);
+    } // get lines
     inputFile.close();
     return fileLines;
 }
@@ -91,16 +87,17 @@ string hashVecStr(vector<string> const& vecOfStr) {
     unsigned long temp;
     const char *array;
     char *endptr;
+    
+    hash<string> hasher;
 
     for (string str : vecOfStr) {
-        array = str.c_str();
-        temp=strtol(array, &endptr, 10);
-        vec.push_back(static_cast<uint32_t>(temp));
+        vec.push_back(static_cast<uint32_t>(hasher(str)));
     }
 
     // Generate hash : https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector/72073933#72073933 
     size_t seed = vec.size();
     for(auto x : vec) {
+        // cout << x << "\n";
         x = ((x >> 16) ^ x) * 0x45d9f3b;
         x = ((x >> 16) ^ x) * 0x45d9f3b;
         x = (x >> 16) ^ x;
@@ -133,6 +130,26 @@ void generateTimeline(){
     return;
 }
 
+bool inFilestore(string fileHash){
+    vector<string> filestore = listFiles("./.bit/filestore");
+    for (const auto& f : filestore) if (baseName(f)==fileHash) return true;
+    return false;
+}
+
+bool addFilestore(const string& pathString, string fileHash = "NA"){
+    if (fileHash=="NA") fileHash = hashFromFile(pathString);
+    fs::path targetParent = "./.bit/filestore/";
+    auto targetLoc = targetParent / fileHash;
+    if (inFilestore(fileHash)) return true; // already exists
+    try {
+        fs::copy_file(pathString, targetLoc, fs::copy_options::overwrite_existing); // use before...: fs::create_directories(targetParent); // Recursively create target directory if not existing.
+    }
+    catch (exception& e) {
+        cout << e.what();
+    }
+    return false; // didn't already exist
+}
+
 string genQueueID(const string& pathString, string fileHash = "NA"){
     if (fileHash=="NA") fileHash = hashFromFile(pathString);// if filehash is not available, generate it.
     string ret = pathString+"::"+fileHash;
@@ -162,8 +179,10 @@ vector<string> deleteQueue(vector<string> queueItems = clearQueue()){
     // remove queue items from filestore
     string toDelete;
     for (const auto& queueItem : queueItems) {
-        toDelete = "./.bit/filestore/"+queueItem;
-        const int result = filesystem::remove(toDelete);
+        // TODO doesn't remove file when asked
+        toDelete = "./.bit/filestore/"+split(queueItem,"::").back();
+        cout << toDelete;
+        const int result = fs::remove(toDelete);
     }
 
     return queueItems;
@@ -176,12 +195,14 @@ void addQueue(const string& pathString, string fileHash = "NA"){
     // if filehash is not available, generate it.
     if (fileHash=="NA") fileHash = hashFromFile(pathString);
     
-    // get contents from pathString
-    // TODO 
+    // add to filestore
+    addFilestore(pathString,fileHash);
 
     // add filename & hash to queue
-    // TODO
-
+    ofstream file; // out file stream
+    file.open("./.bit/queue");
+    file << pathString <<"::"<<fileHash<<endl;
+    file.close();
     return;
 }
 
@@ -195,29 +216,6 @@ bool inQueue(const string& pathString, string fileHash = "NA", vector<string> qu
         if (queueItem==genQueueID(pathString,fileHash)) return true;
     }
     return false;
-}
-
-bool inFilestore(string fileHash){
-    vector<string> filestore = listFiles("./.bit/filestore");
-    for (const auto& f : filestore) {
-        if (baseName(f)==fileHash) return true;
-    }
-    return false;
-}
-
-bool addFilestore(const string& pathString, string fileHash = "NA"){
-    if (fileHash=="NA") fileHash = hashFromFile(pathString);
-    fs::path targetParent = "./.bit/filestore/";
-    auto targetLoc = targetParent / fileHash;
-    if (inFilestore(fileHash)) return true; // already exists
-    try {
-        // fs::create_directories(targetParent); // Recursively create target directory if not existing.
-        fs::copy_file(pathString, targetLoc, fs::copy_options::overwrite_existing);
-    }
-    catch (exception& e) {
-        cout << e.what();
-    }
-    return false; // didn't already exist
 }
 
 
@@ -252,18 +250,17 @@ void queueToTimeline(){
 void currentToQueue(){
     if (!fs::exists("./.bit/timeline")) generateTimeline(); //If it doesn't exist, generate.
     vector<string> toQueue = listFiles();
-    vector<string> queueItems = clearQueue();
+    vector<string> queueItems = deleteQueue();
     cout << "Queued: ";
     bool first = true;
     string bname;
     for (const auto& fileLoc : toQueue) {
         bname = baseName(fileLoc);
-
-        if (bname==".bit") continue; // TODO: replace with check for ignore files.
+        if (bname==".bit"||bname=="bit.exe") continue; // TODO: replace with check for ignore files.
         // TODO iterate through ignoredFiles
 
         string fileHash = hashFromFile(fileLoc);
-        if (inQueue(fileLoc,fileHash,queueItems)) continue;
+        // if (inQueue(fileLoc,fileHash,queueItems)) continue;
 
         // if hash does not exist in queue, push to queue and filestore.
         addQueue(fileLoc,fileHash);

@@ -1,4 +1,4 @@
-# bit
+# bit (WIP)
  Like Git, but mini.
 
 A minimal solution to versioning without all the fancy features. 
@@ -136,7 +136,7 @@ bit [command]
 
 # TODO
 
-## High Priotity
+## High Priority
 
 - [ ] basic functionality
 - [ ] commands
