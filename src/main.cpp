@@ -185,7 +185,6 @@ vector<string> deleteQueue(vector<string> queueItems = clearQueue()){
     string toDelete;
     for (const auto& queueItem : queueItems) {
         toDelete = "./.bit/filestore/"+split(queueItem,"::").back();
-        // cout << toDelete;
         const int result = fs::remove(toDelete);
     }
 
@@ -230,8 +229,8 @@ void queueToTimeline(){
     string fileLoc;
     string fileHash;
 
-    fstream timelineFile;
-    timelineFile.open("./.bit/timeline");
+    ofstream timelineFile;
+    timelineFile.open("./.bit/timeline", ios_base::app);
     timelineFile << "---" << endl;
 
     // iterate through files in queue
@@ -248,10 +247,8 @@ void queueToTimeline(){
             // }
         }
     }
-
-    // Clear queue
+    timelineFile.close();
     clearQueue();
-
     return;
 }
 
@@ -347,7 +344,8 @@ int help(){
             "bit tag : allows for jumping back to most recently add.\n"
             "bit at : runs add and tag consecutively.\n"
             "bit jump [relative index] : jumps relative to current, default is -1.\n"
-            "bit look [max view] : lists history of changes.\n"
+            "bit look : look at specific change.\n"
+            "bit view : view history of changes.\n"
             "bit clear [minimum relative index] : clears history, default is 0.\n"
             "bit delete : removes all traces of bit at this location.\n"
             "bit default [command] : the default bit command, default is 'help'.";
@@ -356,13 +354,13 @@ int help(){
 
 int add(){
     currentToQueue();
-    cout << "Added to timeline";
+    cout << "Added to timeline.\n";
     return 0;
 }
 
 int tag(){
     queueToTimeline();
-    cout << "Tagged in timeline";
+    cout << "Tagged in timeline.\n";
     return 0;
 }
 
@@ -373,9 +371,12 @@ int jump(){
 }
 
 int look(){
-    //TODO
     viewTag();
-    cout << "View timeline";
+    return 0;
+}
+
+int view(){
+    viewTimeline();
     return 0;
 }
 
@@ -408,11 +409,15 @@ int commandLookup(string cmdname){
         return jump();
     } else if (cmdname=="look" || cmdname=="l"){
         return look();
+    } else if (cmdname=="view" || cmdname=="v"){
+        return view();
     } else if (cmdname=="clear" || cmdname=="c"){
         return clear();
     } else if (cmdname=="default" || cmdname=="d"){
         return def();
     }
+
+    // TODO add in delete tag for specific items
 
     cout << "No valid bit command specified, running 'help' as default.\n";
     help();

@@ -48,9 +48,16 @@ bit jump [relative index. ex: -2, -1, 1, 2, etc.]
 
 ----
 
+View specific change. Lists files changed.
+```
+bit look
+```
+
+----
+
 View history of changes. Lists files changed.
 ```
-bit look [max viewable]
+bit view
 ```
 
 ----
