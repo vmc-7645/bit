@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <vector>
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -13,7 +14,7 @@ bool runDefault = false;
 string defaultCommand = "help";
 vector<string> ignoredFiles;
 
-// 
+// Path strings
 const fs::path currentPath = fs::current_path();
 const string currentPathString = currentPath.string();
 
@@ -57,7 +58,7 @@ vector<string> listFiles(const string& pathString = currentPathString) {
 }
 
 // Read file data
-vector<string> fileLineData(const string& pathString) {
+vector<string> fileLineData(const string& pathString, const bool reversed = false) {
     vector<string> fileLines;
     if (!fs::exists(pathString)) {
         cerr << "Error: File does not exist\n";
@@ -69,9 +70,13 @@ vector<string> fileLineData(const string& pathString) {
         return fileLines;
     }
     string line;
+    
     while (getline(inputFile, line)) {
         fileLines.push_back(line);
-    } // get lines
+    } 
+    
+    if (reversed) reverse(fileLines.begin(), fileLines.end()); // TODO, would be more efficient to use deque and push_front instead vector and push_back
+    
     inputFile.close();
     return fileLines;
 }
@@ -179,9 +184,8 @@ vector<string> deleteQueue(vector<string> queueItems = clearQueue()){
     // remove queue items from filestore
     string toDelete;
     for (const auto& queueItem : queueItems) {
-        // TODO doesn't remove file when asked
         toDelete = "./.bit/filestore/"+split(queueItem,"::").back();
-        cout << toDelete;
+        // cout << toDelete;
         const int result = fs::remove(toDelete);
     }
 
@@ -226,6 +230,10 @@ void queueToTimeline(){
     string fileLoc;
     string fileHash;
 
+    fstream timelineFile;
+    timelineFile.open("./.bit/timeline");
+    timelineFile << "---" << endl;
+
     // iterate through files in queue
     for (const auto& queueItem : queueItems) {
         
@@ -234,9 +242,10 @@ void queueToTimeline(){
         if (!vec.empty()) {
             fileLoc = vec.front();
             fileHash = vec.back();
-            if (inQueue(fileLoc,fileHash)){
-                addFilestore(fileLoc,fileHash);
-            }
+            // if (inQueue(fileLoc,fileHash,queueItems)){ // TODO might not need to check this
+            addFilestore(fileLoc,fileHash);
+            timelineFile << queueItem << endl;
+            // }
         }
     }
 
@@ -269,7 +278,7 @@ void currentToQueue(){
         else cout<<", "<<bname;
         first=false;
     }
-    cout <<"\n";
+    cout << "\n";
     return;
 } 
 
@@ -306,6 +315,29 @@ void printVS(vector<string> toPrint){
     return;
 }
 
+
+void viewTimeline(){
+    // TODO add limit for how many items we can print
+    vector<string> timelineData = fileLineData("./.bit/timeline", false);
+    printVS(timelineData);
+    return;
+}
+
+void viewTag(const int loc=0){
+    //TODO allow for jumping forward as well with negative numbers?? Or maybe just keep using the original iterators from the latest version.
+    //Maybe we should allow for ids or something so that we can jump to static locations.
+    vector<string> timelineData = fileLineData("./.bit/timeline", true);
+    vector<string> tagToSee;
+    int iterator = 0;
+    for (const auto& line : timelineData) {
+        if (line=="---")iterator++;
+        if (iterator==loc)tagToSee.push_back(line);
+        else if (iterator>loc) break;
+    }
+    printVS(tagToSee);
+    return;
+}
+
 // User facing functions
 int help(){
     cout << "Help:\n"
@@ -323,11 +355,7 @@ int help(){
 }
 
 int add(){
-    // vector<string> files = listFiles();
-    // printVS(files);
-    
     currentToQueue();
-
     cout << "Added to timeline";
     return 0;
 }
@@ -346,6 +374,7 @@ int jump(){
 
 int look(){
     //TODO
+    viewTag();
     cout << "View timeline";
     return 0;
 }
