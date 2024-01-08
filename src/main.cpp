@@ -70,13 +70,10 @@ vector<string> fileLineData(const string& pathString, const bool reversed = fals
         return fileLines;
     }
     string line;
-    
     while (getline(inputFile, line)) {
         fileLines.push_back(line);
     } 
-    
     if (reversed) reverse(fileLines.begin(), fileLines.end()); // TODO, would be more efficient to use deque and push_front instead vector and push_back
-    
     inputFile.close();
     return fileLines;
 }
@@ -153,6 +150,11 @@ bool addFilestore(const string& pathString, string fileHash = "NA"){
         cout << e.what();
     }
     return false; // didn't already exist
+}
+
+bool pullFilestore(const vector<string> requestedFiles){
+    //requestedFiles = list of file hashes in filestore
+    return false;
 }
 
 string genQueueID(const string& pathString, string fileHash = "NA"){
@@ -320,7 +322,7 @@ void viewTimeline(){
     return;
 }
 
-void viewTag(const int loc=0){
+vector<string> viewTag(const int loc=0){
     //TODO allow for jumping forward as well with negative numbers?? Or maybe just keep using the original iterators from the latest version.
     //Maybe we should allow for ids or something so that we can jump to static locations.
     vector<string> timelineData = fileLineData("./.bit/timeline", true);
@@ -332,6 +334,31 @@ void viewTag(const int loc=0){
         else if (iterator>loc) break;
     }
     printVS(tagToSee);
+    return tagToSee;
+}
+
+void pullTag(const int loc=0){
+    vector<string> tagRefs = viewTag(loc);
+    string fileLoc;
+    string fileRef;
+
+    // TODO iterate through references to pull the proper files and assign them to the values here
+    for (const auto& l : tagRefs) {
+        vector<string> vec = split(l,"::");
+        if (!vec.empty()) {
+            fileLoc = vec.front();
+            fileRef = vec.back();
+            fs::path refParent = "./.bit/filestore/";
+            auto refLoc = refParent / fileRef;
+            if (inFilestore(fileRef)) return; // already exists
+            try {
+                fs::copy_file(refLoc, fileLoc, fs::copy_options::overwrite_existing); // use before...: fs::create_directories(targetParent); // Recursively create target directory if not existing.
+            }
+            catch (exception& e) {
+                cout << e.what();
+            }
+        }
+    }
     return;
 }
 
@@ -364,8 +391,8 @@ int tag(){
     return 0;
 }
 
-int jump(){
-    //TODO
+int jump(string jumpLoc = "0"){
+    pullTag(stoi(jumpLoc));
     cout << "Jumped";
     return 0;
 }
@@ -393,7 +420,7 @@ int def(){
 }
 
 // Command lookup
-int commandLookup(string cmdname){
+int commandLookup(string cmdname, string atribute = "0"){
     // TODO replace with switch if possible
     if (cmdname=="help" || cmdname=="h"){
         return help();
@@ -406,7 +433,7 @@ int commandLookup(string cmdname){
         tag();
         return 0;
     } else if (cmdname=="jump" || cmdname=="j"){
-        return jump();
+        return jump(atribute);
     } else if (cmdname=="look" || cmdname=="l"){
         return look();
     } else if (cmdname=="view" || cmdname=="v"){
@@ -430,7 +457,6 @@ int main(int argc, char *argv[])
     loadAppData();
     if(argc == 1) return commandLookup(defaultCommand);
     if(argc != 3) runDefault = true; // means that no atributes were used for this command, run with default values.
-    
-    commandLookup(argv[1]);
+    commandLookup(argv[1], argv[2]);
     return 0;
 } 
