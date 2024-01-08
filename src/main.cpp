@@ -189,7 +189,6 @@ vector<string> deleteQueue(vector<string> queueItems = clearQueue()){
         toDelete = "./.bit/filestore/"+split(queueItem,"::").back();
         const int result = fs::remove(toDelete);
     }
-
     return queueItems;
 }
 
@@ -285,6 +284,7 @@ void currentToQueue(){
 
 // Load in app data
 void loadAppData(){
+    // TODO make better
     if (!fs::exists("./.bit/settings")) return; //If it doesn't exist.
     
     // if it does exist, load data in
@@ -323,7 +323,6 @@ void viewTimeline(){
 }
 
 vector<string> viewTag(const int loc=0){
-    //TODO allow for jumping forward as well with negative numbers?? Or maybe just keep using the original iterators from the latest version.
     //Maybe we should allow for ids or something so that we can jump to static locations.
     vector<string> timelineData = fileLineData("./.bit/timeline", true);
     vector<string> tagToSee;
@@ -342,7 +341,7 @@ void pullTag(const int loc=0){
     string fileLoc;
     string fileRef;
 
-    // TODO iterate through references to pull the proper files and assign them to the values here
+    // Iterate through references to pull the proper files and assign them to the values here
     for (const auto& l : tagRefs) {
         vector<string> vec = split(l,"::");
         if (!vec.empty()) {
@@ -408,19 +407,20 @@ int view(){
 }
 
 int clear(){
-    //TODO
+    const int result = fs::remove("./.bit/");
     cout << "Cleared items from timeline";
     return 0;
 }
 
-int def(){
-    //TODO
+int def(string newDef = "help"){
+    //TODO, write to document
+    defaultCommand = newDef;
     cout << "Defined new default command";
     return 0;
 }
 
 // Command lookup
-int commandLookup(string cmdname, string atribute = "0"){
+int commandLookup(string cmdname, string attribute = "0"){
     // TODO replace with switch if possible
     if (cmdname=="help" || cmdname=="h"){
         return help();
@@ -433,7 +433,7 @@ int commandLookup(string cmdname, string atribute = "0"){
         tag();
         return 0;
     } else if (cmdname=="jump" || cmdname=="j"){
-        return jump(atribute);
+        return jump(attribute);
     } else if (cmdname=="look" || cmdname=="l"){
         return look();
     } else if (cmdname=="view" || cmdname=="v"){
@@ -441,7 +441,7 @@ int commandLookup(string cmdname, string atribute = "0"){
     } else if (cmdname=="clear" || cmdname=="c"){
         return clear();
     } else if (cmdname=="default" || cmdname=="d"){
-        return def();
+        return def(attribute);
     }
 
     // TODO add in delete tag for specific items
@@ -453,10 +453,10 @@ int commandLookup(string cmdname, string atribute = "0"){
 
 int main(int argc, char *argv[])
 {
-    // TODO load in program data
+    // Load in program data
     loadAppData();
     if(argc == 1) return commandLookup(defaultCommand);
-    if(argc != 3) runDefault = true; // means that no atributes were used for this command, run with default values.
+    if(argc != 3) runDefault = true; // means that no attributes were used for this command, run with default values.
     commandLookup(argv[1], argv[2]);
     return 0;
 } 
